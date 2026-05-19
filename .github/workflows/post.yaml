@@ -1,32 +1,38 @@
-name: Post
+name: GHSA Bot
 
 on:
   schedule:
-    - cron: "0 9 * * *"
-  workflow_dispatch:
+    - cron: "0 */18 * * *"
+  workflow_dispatch: {}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+permissions:
+  contents: write
 
 jobs:
-  post:
-    name: Post
+  run-bot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-go@v6
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
-      - name: Post
-        run: go run bot.go
-      - name: Update log
+          go-version: "1.25"
+
+      - name: Run bot
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: go run main.go
+
+      - name: Commit log changes
         run: |
-          git config --local user.email "tr3nacetate@proton.me"
-          git config --local user.name "tr3nb0lone"
-          git commit -am "auto-update log."
-          git push origin ${{ github.ref }}
-        continue-on-error: true
+          if [ -n "$(git status --porcelain log.jsonl)" ]; then
+            git config user.name "tr3nb0lone"
+            git config user.email "tr3nacetate@proton.me"
+            git add log.jsonl
+            git commit -m "chore: update advisory log"
+            git push
+          else
+            echo "No log changes to commit"
+          fi
