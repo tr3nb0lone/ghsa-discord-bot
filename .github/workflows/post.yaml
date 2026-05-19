@@ -23,7 +23,7 @@ jobs:
       - name: Run bot
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: go run main.go
+        run: go run bot.go
 
       - name: Commit log changes
         run: |
