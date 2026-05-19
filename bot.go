@@ -153,10 +153,6 @@ func fetchAdvisories() ([]advisory, error) {
 	}
 
 	defer resp.Body.Close()
-	// if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-	// 	body, _ := io.ReadAll(resp.Body)
-	// 	return nil, fmt.Errorf("Problem with GH, got the status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	// }
 
 	var out []advisory
 	decoder := json.NewDecoder(resp.Body)
@@ -169,7 +165,7 @@ func fetchAdvisories() ([]advisory, error) {
 
 func generatePayload(data advisory) discordPayload {
 
-	var mention = ""
+	var mention = "" // this is intentional as I have no need to create + assign a custom role
 	authorName := strings.TrimPrefix(data.SourceCodeURL, "https://github.com/")
 	authorIcon := repoIconURL(data.SourceCodeURL)
 
@@ -219,7 +215,7 @@ func generatePayload(data advisory) discordPayload {
 				},
 				URL: data.HTMLURL,
 				Footer: discordFooter{
-					Text:    "tr3nb0lone/ghsa-bot",
+					Text:    "tr3nb0lone/ghsa-discord-bot",
 					IconURL: "https://github.com/github.png",
 				},
 			},

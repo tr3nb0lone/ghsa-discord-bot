@@ -1,0 +1,32 @@
+name: Post
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+jobs:
+  post:
+    name: Post
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+      - name: Post
+        run: go run bot.go
+      - name: Update log
+        run: |
+          git config --local user.email "tr3nacetate@proton.me"
+          git config --local user.name "tr3nb0lone"
+          git commit -am "auto-update log."
+          git push origin ${{ github.ref }}
+        continue-on-error: true
