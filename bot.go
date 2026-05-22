@@ -22,7 +22,7 @@ var Headers = map[string]string{
 	"cache-control":        "no-cache",
 	"content-type":         "application/json",
 	"X-GitHub-Api-Version": "2022-11-28",
-	"User-Agent":           "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0",
+	"User-Agent":           "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0", // must I not appear as "legit" ?
 }
 
 type advisory struct {
@@ -94,7 +94,7 @@ func main() {
 
 	webhookURL := strings.TrimSpace(os.Getenv("DISCORD_WEBHOOK_URL"))
 	if webhookURL == "" {
-		fmt.Println("No Discord webhook url is set on env!\n")
+		fmt.Println("No Discord webhook url is set on env!")
 		os.Exit(1)
 	}
 
@@ -164,8 +164,8 @@ func fetchAdvisories() ([]advisory, error) {
 }
 
 func generatePayload(data advisory) discordPayload {
-
-	var mention = "" // this is intentional as I have no need to create + assign a custom role
+	// this is intentional as I have no need to create + assign a custom Discord role, help yourself out if needed
+	var mention = ""
 	authorName := strings.TrimPrefix(data.SourceCodeURL, "https://github.com/")
 	authorIcon := repoIconURL(data.SourceCodeURL)
 
@@ -188,8 +188,13 @@ func generatePayload(data advisory) discordPayload {
 						Inline: true,
 					},
 					{
-						Name:   "CVSS Score",
-						Value:  formatScore(data.CVSS.Score),
+						Name: "CVSS Score",
+						Value: func(score *float64) string {
+							if score == nil {
+								return "N/A"
+							}
+							return fmt.Sprintf("%g", *score)
+						}(data.CVSS.Score),
 						Inline: true,
 					},
 					{
@@ -203,8 +208,13 @@ func generatePayload(data advisory) discordPayload {
 						Inline: true,
 					},
 					{
-						Name:   "CVE ID",
-						Value:  valueOrDash(data.CVEID),
+						Name: "CVE ID",
+						Value: func(value string) string {
+							if strings.TrimSpace(value) == "" {
+								return "N/A" // could be anything like "no CVE assigned"
+							}
+							return value
+						}(data.CVEID),
 						Inline: true,
 					},
 				},
@@ -291,7 +301,7 @@ func generateEmbedColor(severity string) int {
 
 func getVulnPkgs(data advisory) string {
 	if len(data.Vulnerabilities) == 0 {
-		return "-"
+		return "N/A"
 	}
 	var b strings.Builder
 	for i, v := range data.Vulnerabilities {
@@ -308,19 +318,7 @@ func getVulnPkgs(data advisory) string {
 	}
 	return b.String()
 }
-func valueOrDash(value string) string {
-	if strings.TrimSpace(value) == "" {
-		return "-"
-	}
-	return value
-}
 
-func formatScore(score *float64) string {
-	if score == nil {
-		return "-"
-	}
-	return fmt.Sprintf("%g", *score)
-}
 func getRefs(data advisory) string {
 	if len(data.References) == 0 {
 		return "-"
