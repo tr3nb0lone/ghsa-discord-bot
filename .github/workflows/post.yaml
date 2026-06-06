@@ -2,7 +2,7 @@ name: GHSA Bot
 
 on:
   schedule:
-    - cron: "0 */18 * * *"
+    - cron: "0 */24 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -28,8 +28,8 @@ jobs:
       - name: Commit log changes
         run: |
           if [ -n "$(git status --porcelain log.jsonl)" ]; then
-            git config user.name "tr3nb0lone"
-            git config user.email "tr3nacetate@proton.me"
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
             git add log.jsonl
             git commit -m "chore: update advisory log"
             git push
